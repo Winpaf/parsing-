@@ -1,79 +1,79 @@
 from bs4 import BeautifulSoup
 import sys
 
-def parse_schedule(html_content):
-    soup = BeautifulSoup(html_content, 'html.parser')
-    trains = []
+def parse_schedule(h):
+    s = BeautifulSoup(h, 'html.parser')
+    t = []
     
-    table = soup.find('table')
-    if not table:
-        return trains
+    tb = s.find('table')
+    if not tb:
+        return t
     
-    rows = table.find_all('tr')[2:]
+    r = tb.find_all('tr')[2:]
     seen = set()
     
-    for row in rows:
-        cells = row.find_all('td')
+    for row in r:
+        c = row.find_all('td')
         
-        if len(cells) == 3:
-            route_text = cells[0].get_text(' ', strip=True)  # сохраняем пробелы
-            time_text = cells[1].get_text(strip=True)
-            days_text = cells[2].get_text(strip=True)
+        if len(c) == 3:
+            rt = c[0].get_text(' ', strip=True)
+            tt = c[1].get_text(strip=True)
+            dt = c[2].get_text(strip=True)
             
             # Разделяем тип поезда, маршрут и номер
-            route = route_text
-            if 'Электричка ' in route_text:
-                route = route_text.replace('Электричка ', '')
-            elif 'Иволга ' in route_text:
-                route = route_text.replace('Иволга ', '')
-            elif 'Ласточка ' in route_text:
-                route = route_text.replace('Ласточка ', '')
-            elif 'Спутник ' in route_text:
-                route = route_text.replace('Спутник ', '')
-            elif 'Дальний ' in route_text:
-                route = route_text.replace('Дальний ', '')
-            elif 'Фирменный экспресс ' in route_text:
-                route = route_text.replace('Фирменный экспресс ', '')
+            rte = rt
+            if 'Электричка ' in rt:
+                rte = rt.replace('Электричка ', '')
+            elif 'Иволга ' in rt:
+                rte = rt.replace('Иволга ', '')
+            elif 'Ласточка ' in rt:
+                rte = rt.replace('Ласточка ', '')
+            elif 'Спутник ' in rt:
+                rte = rt.replace('Спутник ', '')
+            elif 'Дальний ' in rt:
+                rte = rt.replace('Дальний ', '')
+            elif 'Фирменный экспресс ' in rt:
+                rte = rt.replace('Фирменный экспресс ', '')
             
             # Убираем номер поезда из маршрута (последнее слово если это цифры)
-            route_parts = route.split(' ')
-            if route_parts and route_parts[-1].isdigit():
-                route = ' '.join(route_parts[:-1])
+            rp = rte.split(' ')
+            if rp and rp[-1].isdigit():
+                rte = ' '.join(rp[:-1])
             
             # Определяем дни
-            day_type = 'ежедневно'
-            if 'будн' in days_text.lower():
-                day_type = 'будни'
-            elif 'выходн' in days_text.lower():
-                day_type = 'выходные'
+            dy = 'ежедневно'
+            if 'будн' in dt.lower():
+                dy = 'будни'
+            elif 'выходн' in dt.lower():
+                dy = 'выходные'
             
             # Убираем дубликаты
-            train_id = f"{time_text}-{route}"
-            if train_id not in seen and time_text and route:
-                seen.add(train_id)
-                trains.append({
-                    'time': time_text,
-                    'route': route,
-                    'days': day_type
+            tid = f"{tt}-{rte}"
+            if tid not in seen and tt and rte:
+                seen.add(tid)
+                t.append({
+                    'time': tt,
+                    'route': rte,
+                    'days': dy
                 })
     
-    return trains
+    return t
 
 def main():
-    filter_type = None
+    ft = None
     if len(sys.argv) > 1:
-        filter_type = sys.argv[1]
+        ft = sys.argv[1]
     
     try:
         with open('schedule.html', 'r', encoding='utf-8') as f:
-            trains = parse_schedule(f.read())
+            tr = parse_schedule(f.read())
         
         # Фильтрация
-        if filter_type in ['будни', 'ежедневно', 'выходные']:
-            trains = [t for t in trains if t['days'] == filter_type]
+        if ft in ['будни', 'ежедневно', 'выходные']:
+            tr = [t for t in tr if t['days'] == ft]
         
         # Вывод
-        for train in trains:
+        for train in tr:
             print(f"{train['time']} - {train['route']}")
             
     except FileNotFoundError:
